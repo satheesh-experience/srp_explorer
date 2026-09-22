@@ -126,6 +126,8 @@ function FormulaChip({ children }: { children: React.ReactNode }) {
   return <span className="rounded border border-border bg-muted px-2 py-0.5 text-xs font-semibold tabular-nums">{children}</span>;
 }
 
+const EXPLORER_GRID_COLS = "grid-cols-[1.8fr_1fr_1fr_1.6fr_1fr]";
+
 function ModuleTable({
   entries,
   onSelectPath,
@@ -134,38 +136,42 @@ function ModuleTable({
   onSelectPath: (groupKey: string, selectedKeys: string[]) => void;
 }) {
   return (
-    <div className="flex flex-col divide-y divide-border overflow-x-auto text-sm">
-      <div className="grid min-w-[560px] grid-cols-[1.6fr_1fr_1fr_1.8fr] gap-3 pb-2 text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
-        <span>Field</span>
-        <span>Limit</span>
+    <div className="flex flex-col overflow-x-auto text-sm">
+      <div className={`grid min-w-[640px] ${EXPLORER_GRID_COLS} gap-3 border-b border-border pb-2.5 text-[11px] font-bold uppercase tracking-wide text-muted-foreground`}>
+        <span>Sub Category</span>
+        <span>Component Limit</span>
         <span>Points</span>
-        <span>Formula</span>
+        <span>Calculation</span>
+        <span>Total Score</span>
       </div>
       {entries.map((entry) =>
         entry.type === "single" ? (
-          <div key={entry.sub_category_key} className="min-w-[560px] py-3">
-            <div className="grid grid-cols-[1.6fr_1fr_1fr_1.8fr] items-center gap-3">
-              <span className="font-medium">{entry.sub_category_name}</span>
-              <span className="tabular-nums text-muted-foreground">{fmtNum(entry.component_limit)}</span>
-              <span className="tabular-nums text-muted-foreground">{fmtNum(entry.points)}</span>
+          <div key={entry.sub_category_key} className="min-w-[640px] border-b-2 border-l-4 border-blue-400 bg-blue-50/30 px-3 py-3.5">
+            <div className={`grid ${EXPLORER_GRID_COLS} items-start gap-3`}>
+              <div>
+                <span className="font-bold text-[#111827]">{entry.sub_category_name}</span>
+                {entry.has_time_window && (
+                  <p className="mt-1.5 max-w-[220px] rounded-md bg-amber-50 px-2 py-1 text-[11px] font-semibold leading-snug text-amber-800">
+                    ℹ Reviews from the last {entry.no_of_days} days are considered
+                  </p>
+                )}
+                {entry.has_rating_scale_hint && entry.per_unit_score !== null && (
+                  <p className="mt-1.5 max-w-[220px] rounded-md bg-violet-50 px-2 py-1 text-[11px] font-semibold leading-snug text-violet-700">
+                    ⭐ Each star in ratings carries {fmtNum(entry.per_unit_score)} points
+                  </p>
+                )}
+              </div>
+              <span className="pt-0.5 tabular-nums text-muted-foreground">{fmtNum(entry.component_limit)}</span>
+              <span className="pt-0.5 tabular-nums text-muted-foreground">{fmtNum(entry.points)}</span>
               <span className="flex flex-wrap items-center gap-1.5">
                 <FormulaChip>{fmtNum(entry.component_limit)}</FormulaChip>
                 <span className="font-bold text-muted-foreground">×</span>
                 <FormulaChip>{fmtNum(entry.points)}</FormulaChip>
                 <span className="font-bold text-muted-foreground">=</span>
-                <span className="rounded-md bg-teal-50 px-2.5 py-0.5 text-xs font-extrabold text-teal-700">{fmtNum(entry.total_score)}</span>
+                <span className="rounded-md bg-teal-100 px-2.5 py-1 text-xs font-extrabold text-teal-700">{fmtNum(entry.total_score)}</span>
               </span>
+              <span className="pt-0.5 text-lg font-extrabold text-teal-700">{fmtNum(entry.total_score)}</span>
             </div>
-            {entry.has_time_window && (
-              <p className="mt-1.5 text-xs font-semibold text-amber-700">
-                ℹ Reviews from the last {entry.no_of_days} days are considered
-              </p>
-            )}
-            {entry.has_rating_scale_hint && entry.per_unit_score !== null && (
-              <p className="mt-1.5 text-xs font-semibold text-amber-700">
-                ⭐ Each star in ratings carries {fmtNum(entry.per_unit_score)} points
-              </p>
-            )}
           </div>
         ) : (
           <GroupBlock key={entry.group_key} group={entry} onSelectPath={onSelectPath} />
