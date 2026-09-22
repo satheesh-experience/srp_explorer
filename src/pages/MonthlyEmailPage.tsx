@@ -102,7 +102,7 @@ export default function MonthlyEmailPage() {
         <div className="space-y-5 rounded-2xl border border-[#e0d9fa] bg-[#f3f0ff] p-7">
           <div className="rounded-2xl bg-gradient-to-br from-indigo-600 via-purple-600 to-teal-500 p-7 text-white">
             <div className="mb-4 text-xl font-extrabold">
-              ex<span className="text-amber-300">X</span>perience.com
+              e<span className="text-amber-300">X</span>perience.com
             </div>
             <p className="text-base font-bold">Hi {firstLine},</p>
             <p className="mt-1 text-sm text-white/90">

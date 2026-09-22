@@ -4,8 +4,8 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { cn } from "@/lib/utils";
 
-const navItems = [
-  { to: "/", label: "Explorer" },
+const navItems: { to: string; label: string; tag?: string }[] = [
+  { to: "/", label: "SRS Explorer", tag: "Admin" },
   { to: "/dashboard", label: "Agent Dashboard" },
   { to: "/monthly-email", label: "Monthly Email" },
 ];
@@ -37,6 +37,11 @@ export function AppHeader() {
                 }
               >
                 {item.label}
+                {item.tag && (
+                  <span className="ml-1.5 rounded bg-amber-500/20 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-amber-200">
+                    {item.tag}
+                  </span>
+                )}
               </NavLink>
             ))}
             {isAdmin && (

@@ -1,4 +1,5 @@
 import type { UserModule } from "@/lib/scoring";
+import { fmtNum } from "@/lib/scoring";
 import { themeFor } from "@/lib/categoryTheme";
 
 export function CategoryRing({ module, hasAlert }: { module: UserModule; hasAlert: boolean }) {
@@ -38,6 +39,9 @@ export function CategoryRing({ module, hasAlert }: { module: UserModule; hasAler
         )}
       </div>
       <div className="text-sm font-extrabold text-[#111827]">{percent}%</div>
+      <div className="text-[10px] font-semibold text-muted-foreground">
+        {fmtNum(module.earned_score)}/{fmtNum(module.max_score)}
+      </div>
       <div className="text-[10.5px] leading-tight text-muted-foreground">{module.category_name}</div>
     </div>
   );
