@@ -5,6 +5,7 @@ import LoginPage from "@/pages/LoginPage";
 import ExplorerPage from "@/pages/ExplorerPage";
 import DashboardPage from "@/pages/DashboardPage";
 import AdminConfigPage from "@/pages/AdminConfigPage";
+import MonthlyEmailPage from "@/pages/MonthlyEmailPage";
 
 function Shell({ children }: { children: React.ReactNode }) {
   return (
@@ -35,6 +36,16 @@ export default function App() {
           <ProtectedRoute>
             <Shell>
               <DashboardPage />
+            </Shell>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/monthly-email"
+        element={
+          <ProtectedRoute>
+            <Shell>
+              <MonthlyEmailPage />
             </Shell>
           </ProtectedRoute>
         }

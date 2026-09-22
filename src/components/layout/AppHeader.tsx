@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils";
 const navItems = [
   { to: "/", label: "Explorer" },
   { to: "/dashboard", label: "Agent Dashboard" },
+  { to: "/monthly-email", label: "Monthly Email" },
 ];
 
 export function AppHeader() {
