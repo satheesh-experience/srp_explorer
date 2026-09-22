@@ -134,7 +134,7 @@ export default function DashboardPage() {
                     ))}
                   </div>
 
-                  {activeModuleData && <CategoryDetail module={activeModuleData} />}
+                  {activeModuleData && <CategoryDetail key={activeModuleData.category_key} module={activeModuleData} />}
                 </div>
               </div>
             </>
