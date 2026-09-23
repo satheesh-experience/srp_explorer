@@ -60,6 +60,25 @@ export function fmtNum(v: number | null | undefined): string {
   return String(round4(v));
 }
 
+// Shared by both the Calculation Explorer and the Agent Dashboard: names
+// whichever path would maximize the score for a "path_priority" group
+// (e.g. Review Source: Widget vs. Index), given [label, score] pairs in
+// path order and the index of the path that's actually counted (decided
+// by priority, not score) -- always index 0, since priority order never
+// depends on any one business's actual data.
+export function buildPathPriorityHint(labeledScores: [string, number][], selectedIndex: number): string {
+  let bestIndex = 0;
+  labeledScores.forEach((ls, i) => {
+    if (ls[1] > labeledScores[bestIndex][1]) bestIndex = i;
+  });
+  const [selectedLabel, selectedScore] = labeledScores[selectedIndex];
+  const [bestLabel, bestScore] = labeledScores[bestIndex];
+  if (bestIndex === selectedIndex) {
+    return `${selectedLabel} already earns the maximum available ${fmtNum(selectedScore)} points here.`;
+  }
+  return `${bestLabel} scores higher (${fmtNum(bestScore)} pts) than ${selectedLabel} (${fmtNum(selectedScore)} pts) here — for the maximum score, keep ${bestLabel} instead of ${selectedLabel}.`;
+}
+
 // -----------------------------------------------------------------------
 // Effective groups: static exclusive_groups + per-vertical capped
 // connection groups (from connection_group_caps).
@@ -224,12 +243,16 @@ function applyExplorerGroups(
       built[0][0].selected = true;
       built.forEach(([, mk]) => mk.forEach((k) => consumedKeys.add(k)));
       const selectedPath = built[0][0];
+      // Which path is *counted* is decided by priority order, not score,
+      // so the "how do I get full marks" answer has to be derived from
+      // the actual numbers rather than a fixed string.
+      const dynamicHint = buildPathPriorityHint(built.map(([p]) => [p.path_label, p.path_score] as [string, number]), 0);
       groupEntries.push({
         type: "group",
         group_key: group.group_key,
         group_label: group.group_label,
         note: group.explainer,
-        full_marks_hint: group.full_marks_hint,
+        full_marks_hint: dynamicHint,
         selection_kind: group.selection_kind,
         paths: built.map(([p]) => p),
         counted_score: selectedPath.path_score,
@@ -554,12 +577,20 @@ function applyUserGroups(
       }
       built.forEach(([, mk]) => mk.forEach((k) => consumedKeys.add(k)));
 
+      // This hint always compares against Widget (priority index 0), the
+      // same way the Calculation Explorer does -- it's a structural fact
+      // about the vertical's configuration ("which path is worth more"),
+      // not a per-business diagnostic, so it reads identically here as it
+      // does in the admin tool for the same vertical, regardless of which
+      // path this particular business has actually selected.
+      const dynamicHint = buildPathPriorityHint(built.map(([p]) => [p.path_label, p.max_score] as [string, number]), 0);
+
       groupEntries.push({
         type: "group",
         group_key: group.group_key,
         group_label: group.group_label,
         note: group.explainer,
-        full_marks_hint: group.full_marks_hint,
+        full_marks_hint: dynamicHint,
         selection_kind: selectionKind,
         paths: built.map(([p]) => p),
         earned_score: built[selectedIdx][0].earned_score,

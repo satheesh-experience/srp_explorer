@@ -61,7 +61,7 @@ function FieldRow({ row, categoryKey }: { row: ScoredRow; categoryKey: string })
   const overCap = row.completed_units > row.component_limit;
 
   return (
-    <div className={`border-b-2 border-l-4 ${style.border} ${style.bg} px-4 py-4`}>
+    <div className={`mb-2.5 overflow-hidden rounded-xl border-2 shadow-sm last:mb-0 ${style.border} ${style.bg} px-4 py-4`}>
       <div className={`grid ${GRID_COLS} items-start gap-3`}>
         <div>
           <div className="text-sm font-bold text-[#111827]">{row.sub_category_name}</div>
@@ -150,7 +150,7 @@ function GroupPathBlock({ path, group, categoryKey }: { path: UserGroupEntry["pa
           </span>
         </div>
       </div>
-      <div>
+      <div className="p-3">
         {path.fields.map((f) => (
           <FieldRow key={f.sub_category_key} row={f} categoryKey={categoryKey} />
         ))}

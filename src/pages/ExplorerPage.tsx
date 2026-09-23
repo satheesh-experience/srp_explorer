@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { useVerticals } from "@/hooks/useVerticals";
 import { useSrsConfig } from "@/hooks/useSrsConfig";
 import { buildEffectiveGroups, buildExplorerConfig, MODULE_ICONS, fmtNum } from "@/lib/scoring";
-import type { ExplorerEntry, ExplorerGroupEntry } from "@/lib/scoring";
+import type { ExplorerEntry, ExplorerGroupEntry, ExplorerSubCategory } from "@/lib/scoring";
 import { applyExplorerOverrides, computeNextOverrideSelection, type ExplorerOverrides } from "@/lib/applyExplorerOverride";
 import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -128,6 +128,38 @@ function FormulaChip({ children }: { children: React.ReactNode }) {
 
 const EXPLORER_GRID_COLS = "grid-cols-[1.8fr_1fr_1fr_1.6fr_1fr]";
 
+function ExplorerFieldRow({ entry, accentClass, bgClass }: { entry: ExplorerSubCategory; accentClass?: string; bgClass?: string }) {
+  return (
+    <div className={`mb-2.5 overflow-hidden rounded-lg border border-border shadow-sm last:mb-0 ${bgClass ?? "bg-white"}`}>
+      <div className={`grid ${EXPLORER_GRID_COLS} items-start gap-3 border-l-4 px-3 py-3 ${accentClass ?? "border-blue-400"}`}>
+        <div>
+          <span className="font-bold text-[#111827]">{entry.sub_category_name}</span>
+          {entry.has_time_window && (
+            <p className="mt-1.5 max-w-[220px] rounded-md bg-amber-50 px-2 py-1 text-[11px] font-semibold leading-snug text-amber-800">
+              ℹ Reviews from the last {entry.no_of_days} days are considered
+            </p>
+          )}
+          {entry.has_rating_scale_hint && entry.per_unit_score !== null && (
+            <p className="mt-1.5 max-w-[220px] rounded-md bg-violet-50 px-2 py-1 text-[11px] font-semibold leading-snug text-violet-700">
+              ⭐ Each star in ratings carries {fmtNum(entry.per_unit_score)} points
+            </p>
+          )}
+        </div>
+        <span className="pt-0.5 tabular-nums text-muted-foreground">{fmtNum(entry.component_limit)}</span>
+        <span className="pt-0.5 tabular-nums text-muted-foreground">{fmtNum(entry.points)}</span>
+        <span className="flex flex-wrap items-center gap-1.5">
+          <FormulaChip>{fmtNum(entry.component_limit)}</FormulaChip>
+          <span className="font-bold text-muted-foreground">×</span>
+          <FormulaChip>{fmtNum(entry.points)}</FormulaChip>
+          <span className="font-bold text-muted-foreground">=</span>
+          <span className="rounded-md bg-emerald-50 px-2.5 py-1 text-xs font-extrabold text-emerald-700">{fmtNum(entry.total_score)}</span>
+        </span>
+        <span className="pt-0.5 text-lg font-extrabold text-blue-600">{fmtNum(entry.total_score)}</span>
+      </div>
+    </div>
+  );
+}
+
 function ModuleTable({
   entries,
   onSelectPath,
@@ -137,46 +169,22 @@ function ModuleTable({
 }) {
   return (
     <div className="flex flex-col overflow-x-auto text-sm">
-      <div className={`grid min-w-[640px] ${EXPLORER_GRID_COLS} gap-3 border-b border-border pb-2.5 text-[11px] font-bold uppercase tracking-wide text-muted-foreground`}>
+      <div className={`grid min-w-[640px] ${EXPLORER_GRID_COLS} gap-3 border-b border-border pb-2.5 mb-2 text-[11px] font-bold uppercase tracking-wide text-muted-foreground`}>
         <span>Sub Category</span>
         <span>Component Limit</span>
         <span>Points</span>
         <span>Calculation</span>
         <span>Total Score</span>
       </div>
-      {entries.map((entry) =>
-        entry.type === "single" ? (
-          <div key={entry.sub_category_key} className="min-w-[640px] border-b border-border px-3 py-3.5">
-            <div className={`grid ${EXPLORER_GRID_COLS} items-start gap-3`}>
-              <div>
-                <span className="font-bold text-[#111827]">{entry.sub_category_name}</span>
-                {entry.has_time_window && (
-                  <p className="mt-1.5 max-w-[220px] rounded-md bg-amber-50 px-2 py-1 text-[11px] font-semibold leading-snug text-amber-800">
-                    ℹ Reviews from the last {entry.no_of_days} days are considered
-                  </p>
-                )}
-                {entry.has_rating_scale_hint && entry.per_unit_score !== null && (
-                  <p className="mt-1.5 max-w-[220px] rounded-md bg-violet-50 px-2 py-1 text-[11px] font-semibold leading-snug text-violet-700">
-                    ⭐ Each star in ratings carries {fmtNum(entry.per_unit_score)} points
-                  </p>
-                )}
-              </div>
-              <span className="pt-0.5 tabular-nums text-muted-foreground">{fmtNum(entry.component_limit)}</span>
-              <span className="pt-0.5 tabular-nums text-muted-foreground">{fmtNum(entry.points)}</span>
-              <span className="flex flex-wrap items-center gap-1.5">
-                <FormulaChip>{fmtNum(entry.component_limit)}</FormulaChip>
-                <span className="font-bold text-muted-foreground">×</span>
-                <FormulaChip>{fmtNum(entry.points)}</FormulaChip>
-                <span className="font-bold text-muted-foreground">=</span>
-                <span className="rounded-md bg-emerald-50 px-2.5 py-1 text-xs font-extrabold text-emerald-700">{fmtNum(entry.total_score)}</span>
-              </span>
-              <span className="pt-0.5 text-lg font-extrabold text-blue-600">{fmtNum(entry.total_score)}</span>
-            </div>
-          </div>
-        ) : (
-          <GroupBlock key={entry.group_key} group={entry} onSelectPath={onSelectPath} />
-        )
-      )}
+      <div className="min-w-[640px]">
+        {entries.map((entry) =>
+          entry.type === "single" ? (
+            <ExplorerFieldRow key={entry.sub_category_key} entry={entry} />
+          ) : (
+            <GroupBlock key={entry.group_key} group={entry} onSelectPath={onSelectPath} />
+          )
+        )}
+      </div>
     </div>
   );
 }
@@ -194,7 +202,7 @@ function GroupBlock({
   const selectedCount = group.paths.filter((p) => p.selected).length;
 
   return (
-    <div className={`my-2 rounded-lg border p-3 ${isCapped ? "border-indigo-200 bg-indigo-50/40" : "border-dashed border-border bg-muted/40"}`}>
+    <div className={`mb-3 rounded-xl border border-dashed p-4 ${isCapped ? "border-indigo-200 bg-indigo-50/30" : "border-border bg-muted/30"}`}>
       <div className="mb-2 flex flex-wrap items-center gap-2">
         <span className="font-bold">{group.group_label}</span>
         <span
@@ -208,43 +216,62 @@ function GroupBlock({
       </div>
 
       {group.note && (
-        <p className="mb-2 rounded-md border-l-4 border-primary bg-blue-50 p-2.5 text-[13px] font-medium">{group.note}</p>
+        <p className="mb-3 rounded-md border-l-4 border-primary bg-blue-50 p-2.5 text-[13px] font-medium">{group.note}</p>
       )}
 
-      <div className="space-y-1.5">
+      <div>
         {group.paths.map((path) => {
           const clickable = canSelect && !path.selected;
-          const isMultiField = path.fields.length > 1;
+          const boxCls = path.selected
+            ? "border-emerald-400 bg-emerald-50"
+            : isCapped
+            ? "border-indigo-200 bg-indigo-50/50"
+            : "border-rose-200 bg-rose-50/40 opacity-70";
+
           return (
-            <button
-              key={path.path_key}
-              type="button"
-              disabled={!clickable}
-              onClick={clickable ? () => onSelectPath(group.group_key, computeNextOverrideSelection(group, path.path_key)) : undefined}
-              className={`flex w-full items-center justify-between rounded-md px-2.5 py-1.5 text-xs transition ${
-                path.selected
-                  ? "bg-emerald-50 font-semibold text-emerald-900"
-                  : isCapped
-                  ? "border border-indigo-200 bg-white text-indigo-900 hover:border-indigo-400"
-                  : "text-muted-foreground opacity-50 hover:opacity-80"
-              } ${clickable ? "cursor-pointer" : "cursor-default"}`}
-            >
-              <span>
-                {path.selected ? "✓ " : isCapped ? "＋ " : ""}
-                {path.path_label}
-                {isCapped && !path.selected && <span className="ml-1.5 text-[10px] font-bold uppercase">Not counted — extra</span>}
-              </span>
-              <span className="flex items-center gap-2">
-                {isMultiField && <span className="tabular-nums text-muted-foreground">{fmtNum(path.path_score)} pts</span>}
-                <span className="font-bold tabular-nums">{fmtNum(path.path_score)}</span>
-              </span>
-            </button>
+            <div key={path.path_key} className={`mb-3 overflow-hidden rounded-xl border-2 last:mb-0 ${boxCls}`}>
+              <div className="flex items-center justify-between px-4 py-2">
+                <span className="text-sm font-bold text-[#111827]">
+                  {path.selected ? "✓ " : isCapped ? "＋ " : ""}
+                  {path.path_label}
+                </span>
+                <div className="flex items-center gap-3">
+                  <span
+                    className={`rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wide ${
+                      path.selected ? "bg-emerald-200 text-emerald-900" : isCapped ? "bg-indigo-200 text-indigo-900" : "bg-rose-100 text-rose-700"
+                    }`}
+                  >
+                    {path.selected ? "Counted toward score" : isCapped ? "Not counted — extra" : "Not counted"}
+                  </span>
+                  <span className="text-xs font-bold text-muted-foreground">{fmtNum(path.path_score)} pts</span>
+                  {clickable && (
+                    <button
+                      type="button"
+                      onClick={() => onSelectPath(group.group_key, computeNextOverrideSelection(group, path.path_key))}
+                      className="rounded border border-border bg-white px-2 py-0.5 text-[10px] font-bold text-muted-foreground hover:border-primary hover:text-primary"
+                    >
+                      Preview this
+                    </button>
+                  )}
+                </div>
+              </div>
+              <div className="px-3 pb-3">
+                {path.fields.map((f) => (
+                  <ExplorerFieldRow
+                    key={f.sub_category_key}
+                    entry={f}
+                    accentClass={path.selected ? "border-emerald-400" : isCapped ? "border-indigo-300" : "border-rose-300"}
+                    bgClass="bg-white/80"
+                  />
+                ))}
+              </div>
+            </div>
           );
         })}
       </div>
 
       {cap > 1 && (
-        <p className="mt-2 text-xs font-semibold text-muted-foreground">
+        <p className="mt-1 text-xs font-semibold text-muted-foreground">
           {selectedCount} of {group.paths.length} counted toward your score (capped at {cap}).
         </p>
       )}
@@ -257,7 +284,7 @@ function GroupBlock({
 
       {canSelect && (
         <p className="mt-1.5 text-xs italic text-muted-foreground">
-          💡 Click a faded option above to preview how the score would change{cap > 1 ? " — the weakest current pick makes room for it" : ""}.
+          💡 Click "Preview this" on a faded option above to see how the score would change{cap > 1 ? " — the weakest current pick makes room for it" : ""}.
         </p>
       )}
 

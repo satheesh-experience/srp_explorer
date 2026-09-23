@@ -15,9 +15,9 @@ values
    'Your site''s load time should be 2.5 seconds or under to earn full points.',
    '["load_time_less_or_equals_2o5","load_time_between_2o6_and_4","load_time_greater_than_4"]'::jsonb, null),
   ('review_source', 'Review Source: Widget vs. Index', 'web_analytics', 'path_priority', null, 'capped',
-   'If a business connects both a review widget and review index tracking, only the Review Index score counts by default; the Through Widget field is scored only when Review Index isn''t connected.',
+   'If a business connects both a review widget and review index tracking, only the widget score counts; the four Review Index fields are scored only when no widget is connected.',
    null, null,
-   '[{"path_key":"index","path_label":"Review Index","members":["review_index_rating_on_each","review_index_text","review_index_location","review_index_date"]},{"path_key":"widget","path_label":"Through Widget","members":["through_widget"]}]'::jsonb)
+   '[{"path_key":"widget","path_label":"Through Widget","members":["through_widget"]},{"path_key":"index","path_label":"Review Index","members":["review_index_rating_on_each","review_index_text","review_index_location","review_index_date"]}]'::jsonb)
 on conflict (group_key) do nothing;
 insert into public.verticals (vertical_id, vertical_name, header_id, header_name, header_score) values
   (2, 'Mortgage', 2, 'Mortgage', 850.0),
