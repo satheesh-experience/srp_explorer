@@ -26,18 +26,6 @@ function StatusPill({ status }: { status: Status }) {
   return <span className="rounded-full bg-gray-100 px-2 py-0.5 text-[10.5px] font-bold text-muted-foreground">○ Not started</span>;
 }
 
-// Mirrors pathTag()/pathStateClass() from the original prototype: once a
-// group's outcome is decided (enough paths have real progress to account
-// for its cap), an untouched alternative reads "Not needed" rather than
-// "Not started" -- and a path that *was* completed but excluded by the
-// cap keeps its own distinct "Connected — cap reached" state.
-function pathTag(path: { selected: boolean; over_cap: boolean }, group: UserGroupEntry) {
-  if (path.selected) return { text: "✓ Counted toward score", cls: "bg-emerald-100 text-emerald-700" };
-  if (path.over_cap) return { text: "✓ Connected — cap reached", cls: "bg-amber-100 text-amber-800" };
-  if (groupHasDecidedOutcome(group.cap, group.paths)) return { text: "Not needed", cls: "border border-dashed border-border text-muted-foreground" };
-  return { text: "○ Not started", cls: "border border-border bg-muted text-muted-foreground" };
-}
-
 function FieldDefinitionToggle({ row, categoryKey }: { row: ScoredRow; categoryKey: string }) {
   const [expanded, setExpanded] = useState(false);
   if (row.is_complete || categoryKey !== "web_analytics") return null;
@@ -133,58 +121,84 @@ function FieldRow({ row, categoryKey }: { row: ScoredRow; categoryKey: string })
   );
 }
 
-function GroupRow({ group }: { group: UserGroupEntry }) {
+function pathVisualKind(path: { selected: boolean; over_cap: boolean }, group: UserGroupEntry): "selected" | "overcap" | "notneeded" | "notstarted" {
+  if (path.selected) return "selected";
+  if (path.over_cap) return "overcap";
+  if (groupHasDecidedOutcome(group.cap, group.paths)) return "notneeded";
+  return "notstarted";
+}
+
+const PATH_STYLES: Record<string, { border: string; bg: string; tagCls: string; tagText: string; faded: boolean }> = {
+  selected: { border: "border-emerald-500", bg: "bg-emerald-50", tagCls: "bg-emerald-100 text-emerald-700", tagText: "✓ Counted toward score", faded: false },
+  overcap: { border: "border-amber-500", bg: "bg-amber-50", tagCls: "bg-amber-100 text-amber-800", tagText: "✓ Connected — cap reached", faded: false },
+  notneeded: { border: "border-rose-300", bg: "bg-rose-50/40", tagCls: "border border-dashed border-rose-200 bg-transparent text-muted-foreground", tagText: "Not needed", faded: true },
+  notstarted: { border: "border-rose-400", bg: "bg-rose-50/60", tagCls: "border border-border bg-white text-muted-foreground", tagText: "○ Not started", faded: false },
+};
+
+function GroupPathBlock({ path, group, categoryKey }: { path: UserGroupEntry["paths"][number]; group: UserGroupEntry; categoryKey: string }) {
+  const kind = pathVisualKind(path, group);
+  const style = PATH_STYLES[kind];
+
+  return (
+    <div className={`mb-3 overflow-hidden rounded-lg border-2 ${style.border} last:mb-0 ${style.faded ? "opacity-70" : ""}`}>
+      <div className={`flex items-center justify-between px-4 py-2 ${style.bg}`}>
+        <span className="text-sm font-bold text-[#111827]">{path.path_label}</span>
+        <div className="flex items-center gap-3">
+          <span className={`rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wide ${style.tagCls}`}>{style.tagText}</span>
+          <span className="text-xs font-bold text-muted-foreground">
+            {fmtNum(path.earned_score)} / {fmtNum(path.max_score)} pts
+          </span>
+        </div>
+      </div>
+      <div>
+        {path.fields.map((f) => (
+          <FieldRow key={f.sub_category_key} row={f} categoryKey={categoryKey} />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function GroupRow({ group, categoryKey }: { group: UserGroupEntry; categoryKey: string }) {
   const cap = group.cap ?? 1;
   const isCapped = group.selection_kind === "capped";
 
   return (
-    <div className={`border-b-2 border-l-4 px-4 py-4 ${isCapped ? "border-indigo-400 bg-indigo-50/30" : "border-slate-300 bg-slate-50/40"}`}>
+    <div className="my-3 rounded-xl border border-dashed border-[#c7d2fe] bg-[#f8f9ff] p-4">
       <div className="flex flex-wrap items-center gap-2">
         <span className="text-sm font-bold text-[#111827]">{group.group_label}</span>
         <span
-          className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide ${
+          className={`rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wide ${
             isCapped ? "bg-indigo-100 text-indigo-800" : "bg-amber-100 text-amber-800"
           }`}
         >
           {cap === 1 ? "Only one option counts" : `Best ${cap} of ${group.paths.length} count`}
         </span>
         <span className="ml-auto text-sm font-bold text-[#111827]">
-          {fmtNum(group.earned_score)} / {fmtNum(group.max_score)}
+          {fmtNum(group.earned_score)} / {fmtNum(group.max_score)} pts
         </span>
       </div>
-      {group.note && <p className="mt-1.5 text-xs text-muted-foreground">{group.note}</p>}
+      {group.note && (
+        <p className="mt-2 rounded-md border-l-4 border-indigo-400 bg-indigo-50 p-2.5 text-[13px] font-medium text-[#1e293b]">{group.note}</p>
+      )}
 
-      <div className="mt-2.5 space-y-1.5">
-        {group.paths.map((p) => {
-          const tag = pathTag(p, group);
-          return (
-            <div
-              key={p.path_key}
-              className={`rounded-md px-3 py-1.5 text-xs ${p.selected ? "bg-emerald-50" : isCapped ? "border border-indigo-100 bg-white" : "bg-white"}`}
-            >
-              <div className="flex items-center justify-between">
-                <span className={p.selected ? "font-semibold text-[#111827]" : "text-muted-foreground"}>
-                  {p.selected ? "✓ " : ""}
-                  {p.path_label}
-                </span>
-                <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${tag.cls}`}>{tag.text}</span>
-              </div>
-              <div className="mt-1 text-right text-muted-foreground">
-                {fmtNum(p.earned_score)} / {fmtNum(p.max_score)}
-              </div>
-            </div>
-          );
-        })}
+      <div className="mt-3">
+        {group.paths.map((p) => (
+          <GroupPathBlock key={p.path_key} path={p} group={group} categoryKey={categoryKey} />
+        ))}
       </div>
 
       {cap > 1 && (
-        <p className="mt-2 text-[11px] font-semibold text-muted-foreground">
+        <p className="mt-1 text-[11px] font-semibold text-muted-foreground">
           {group.paths.filter((p) => p.selected).length} of {group.paths.length} counted toward your score (capped at {cap}).
         </p>
       )}
 
       {group.full_marks_hint && (
-        <p className="mt-2 rounded-md bg-teal-50 px-3 py-2 text-xs font-semibold text-teal-800">🏆 {group.full_marks_hint}</p>
+        <div className="mt-2 flex items-start gap-2 rounded-md border border-teal-200 bg-teal-50 p-2.5 text-xs font-semibold text-teal-800">
+          <span>🏆</span>
+          <span>{group.full_marks_hint}</span>
+        </div>
       )}
     </div>
   );
@@ -244,7 +258,7 @@ export function CategoryDetail({ module }: { module: UserModule }) {
         <div>
           {visibleEntries.map((entry) =>
             entry.type === "group" ? (
-              <GroupRow key={entry.group_key} group={entry} />
+              <GroupRow key={entry.group_key} group={entry} categoryKey={module.category_key} />
             ) : (
               <FieldRow key={entry.sub_category_key} row={entry} categoryKey={module.category_key} />
             )

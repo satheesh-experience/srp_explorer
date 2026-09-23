@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useAgents } from "@/hooks/useAgents";
 import { useAgentDashboard } from "@/hooks/useAgentDashboard";
 import { useSrsConfig } from "@/hooks/useSrsConfig";
@@ -13,6 +14,7 @@ import { EmailAlertsDigest } from "@/components/email/EmailAlertsDigest";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 export default function MonthlyEmailPage() {
+  const navigate = useNavigate();
   const { data: agents, isLoading: loadingAgents } = useAgents();
   const { data: verticals } = useVerticals();
   const { data: bundle, isLoading: loadingConfig } = useSrsConfig();
@@ -159,8 +161,8 @@ export default function MonthlyEmailPage() {
 
           <button
             type="button"
-            disabled
-            className="w-full rounded-lg bg-gradient-to-r from-indigo-600 to-teal-500 py-3.5 text-sm font-bold text-white"
+            onClick={() => navigate(`/dashboard?agent=${activeAgentId}`)}
+            className="w-full rounded-lg bg-gradient-to-r from-indigo-600 to-teal-500 py-3.5 text-sm font-bold text-white transition hover:brightness-105"
           >
             View My Full Dashboard →
           </button>

@@ -1,4 +1,5 @@
 import { useCallback, useMemo, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { useAgents } from "@/hooks/useAgents";
 import { useAgentDashboard } from "@/hooks/useAgentDashboard";
 import { useSrsConfig } from "@/hooks/useSrsConfig";
@@ -21,7 +22,9 @@ export default function DashboardPage() {
   const { data: agents, isLoading: loadingAgents } = useAgents();
   const { data: verticals } = useVerticals();
   const { data: bundle, isLoading: loadingConfig } = useSrsConfig();
-  const [agentId, setAgentId] = useState<number | null>(null);
+  const [searchParams] = useSearchParams();
+  const agentFromUrl = searchParams.get("agent");
+  const [agentId, setAgentId] = useState<number | null>(agentFromUrl ? Number(agentFromUrl) : null);
   const [activeModule, setActiveModule] = useState<string | null>(null);
 
   const activeAgentId = agentId ?? agents?.[0]?.agent_id ?? null;

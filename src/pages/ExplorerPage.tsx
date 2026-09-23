@@ -146,7 +146,7 @@ function ModuleTable({
       </div>
       {entries.map((entry) =>
         entry.type === "single" ? (
-          <div key={entry.sub_category_key} className="min-w-[640px] border-b-2 border-l-4 border-blue-400 bg-blue-50/30 px-3 py-3.5">
+          <div key={entry.sub_category_key} className="min-w-[640px] border-b border-border px-3 py-3.5">
             <div className={`grid ${EXPLORER_GRID_COLS} items-start gap-3`}>
               <div>
                 <span className="font-bold text-[#111827]">{entry.sub_category_name}</span>
@@ -168,9 +168,9 @@ function ModuleTable({
                 <span className="font-bold text-muted-foreground">×</span>
                 <FormulaChip>{fmtNum(entry.points)}</FormulaChip>
                 <span className="font-bold text-muted-foreground">=</span>
-                <span className="rounded-md bg-teal-100 px-2.5 py-1 text-xs font-extrabold text-teal-700">{fmtNum(entry.total_score)}</span>
+                <span className="rounded-md bg-emerald-50 px-2.5 py-1 text-xs font-extrabold text-emerald-700">{fmtNum(entry.total_score)}</span>
               </span>
-              <span className="pt-0.5 text-lg font-extrabold text-teal-700">{fmtNum(entry.total_score)}</span>
+              <span className="pt-0.5 text-lg font-extrabold text-blue-600">{fmtNum(entry.total_score)}</span>
             </div>
           </div>
         ) : (
